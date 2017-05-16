@@ -1,8 +1,9 @@
 # Batalha Naval
 Jogo padrão de batalha naval onde serão gerados números aleatórios de submarinos (no máximo 12) em um "tabuleiro" em forma de matriz 15x15 em posições também aleatórias. É um jogo SinglePlayer onde seu objetivo é encontrar todos os submarinos com a menor quantidade de tentativas possível, não ultrapassando 150 tiros. (atirar duas vezes no mesmo lugar também conta como tentativa, portanto, cuidado).
 
-# Desenvolvedor
+# Desenvolvedores
 Jonas Amâncio Silva Santos - https://github.com/DarkCinins
+Kau Leal Oliveira - https://github.com/KauLeal
 
 # Algoritmos Usados
 <li>Condicionais - Leitura do teclado.</li>
