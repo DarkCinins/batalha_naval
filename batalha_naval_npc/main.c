@@ -41,6 +41,7 @@ int main()
     allegro_init();
     install_timer();
     install_keyboard();
+    install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL);
     set_color_depth(32);
     set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1300, 650, 0, 0);
     set_window_title("Batalha Naval 1.0");
@@ -48,6 +49,11 @@ int main()
     LOCK_FUNCTION(fechar_programa);
     set_close_button_callback(fechar_programa);
     ///END ALLEGRO
+
+    ///SOUNDS
+    SAMPLE* explosao = load_sample("explosao.wav");
+    SAMPLE* onda = load_sample("onda.wav");
+    ///END SOUNDS
 
     ///FONT
     FONT* arial_48 = load_font("arial_48.pcx", NULL, NULL);
@@ -249,6 +255,7 @@ int main()
                     {
                         if(m1[hor/30][ver/30] == 1)
                         {
+                            play_sample(explosao, 255, 128, 1000, FALSE);
                             bomba += 2;
                             pos_bomba[bomba] = hor;
                             pos_bomba[bomba+1] = ver;
@@ -256,6 +263,7 @@ int main()
                         }
                         else
                         {
+                            play_sample(onda, 255, 128, 1000, FALSE);
                             mares += 2;
                             pos_mar[mares] = hor;
                             pos_mar[mares+1] = ver;
@@ -283,11 +291,13 @@ int main()
                     if(tiros == 150)
                     {
                         clear(screen);
+                        placar[9].tentativas = tiros;
 
                         while(!exit_program)
                         {
                             textprintf_ex(screen, font, 10, 10, makecol(255, 255, 255), -1, "ESC para sair");
                             textout_centre_ex(screen, arial_48, "VOCE PERDEU!!", SCREEN_W/2, SCREEN_H/2-100, makecol(r, g, b), -1);
+                            textprintf_centre_ex(screen, font, SCREEN_W/2, 600, makecol(255, 255, 255), -1, "ENTER para prosseguir");
                             textprintf_centre_ex(screen, gothic_18, SCREEN_W/2, SCREEN_H/2 + 100, makecol(255, 255, 255), -1, "Submarinos encontrados: %d/%d", finded, qnt_ships);
 
                             ///COLOR CHANGE
@@ -316,6 +326,99 @@ int main()
                                  }
                              }
                              ///END COLOR
+
+                            int leitura = readkey();
+                            char apaga = leitura >> 8;
+
+                             if(apaga == KEY_ENTER || apaga == KEY_ENTER_PAD)
+                             {
+                                clear(screen);
+                                i = 0;
+                                while(!exit_program)
+                                {
+                                    textprintf_ex(buffer, font, 10, 10, makecol(255, 255, 255), -1, "ESC para sair");
+                                    textprintf_centre_ex(buffer, font, SCREEN_W/2, 600, makecol(255, 255, 255), -1, "ENTER para prosseguir");
+                                    textprintf_centre_ex(buffer, font, SCREEN_W/2, 400, makecol(255, 255, 255), -1, "(no maximo 12 letras)");
+                                    textout_centre_ex(buffer, arial_48, "DIGITE SEU NOME", SCREEN_W/2, 30, makecol(0, 0, 255), -1);
+
+                                    draw_sprite(screen, buffer, 0, 0);
+                                    clear(buffer);
+
+                                    leitura = readkey();
+                                    char letra = leitura & 0xff;
+                                    apaga = leitura >> 8;
+
+                                    if(apaga == KEY_BACKSPACE)
+                                    {
+                                        placar[9].nome[i-1] = '\0';
+                                        i--;
+                                    }
+                                    if(letra >= 32 && letra <= 126)
+                                    {
+                                        placar[9].nome[i] = letra;
+                                        i++;
+                                    }
+                                    if(i == 12) i--;
+
+                                    textprintf_centre_ex(buffer, gothic_18, SCREEN_W/2, 300, makecol(255, 0, 0), -1, "%s", placar[9].nome);
+
+                                    if(apaga == KEY_ENTER || apaga == KEY_ENTER_PAD)
+                                    {
+                                        clear(screen);
+                                        clear(buffer);
+                                        int pos = 9;
+
+                                        while(!exit_program)
+                                        {
+                                            ///SCREEN
+                                            textprintf_ex(buffer, font, 10, 10, makecol(255, 255, 255), -1, "ESC para sair");
+                                            textout_centre_ex(buffer, arial_48, "PLACAR", SCREEN_W/2, 30, makecol(r, g, b), -1);
+
+                                            ordenar(placar, pos);
+
+                                            for(i = 0; i < 10; i++)
+                                            {
+                                                textprintf_ex(buffer, gothic_18, SCREEN_W/2-100, 70+dist, makecol(255, 255, 255), -1, "%d - %s: %d", i+1, placar[i].nome, placar[i].tentativas);
+                                                dist += 30;
+                                            }
+                                            dist = 30;
+                                            ///END SCREEN
+
+                                            ///COLOR CHANGE
+                                            if(r < 255)
+                                             {
+                                                 r++;
+                                             }
+                                             else
+                                             {
+                                                 if(g < 255)
+                                                 {
+                                                     g++;
+                                                 }
+                                                 else
+                                                 {
+                                                     if(b < 255)
+                                                     {
+                                                         b++;
+                                                     }
+                                                     else
+                                                     {
+                                                         r = 0;
+                                                         b = 125;
+                                                         g = 0;
+                                                     }
+                                                 }
+                                             }
+                                             ///END COLOR
+
+                                            draw_sprite(screen, buffer, 0, 0);
+                                            clear(buffer);
+
+                                            SAIDA
+                                        }
+                                    }
+                                }
+                             }
 
                              SAIDA
                         }
@@ -500,6 +603,8 @@ int main()
    destroy_bitmap(buffer);
    destroy_bitmap(mar);
    destroy_bitmap(explosion);
+   destroy_sample(explosao);
+   destroy_sample(onda);
    for(i = 0; i < 15; i++)
 	{
 		free(m1[i]);
